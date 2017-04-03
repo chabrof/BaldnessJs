@@ -1,0 +1,15 @@
+<html>
+<script src="./node_modules/requirejs/require.js"></script>
+<script>
+require.config(
+  {
+		baseUrl: 'js',
+		/*paths: {
+      focusable: '../node_modules/sgj_focus/src/focusable',
+      collection: '../node_modules/sgj_focus/src/collection',
+      focus_mgr: '../node_modules/sgj_focus/src/focus_mgr',
+      abstract_smart_list: '../node_modules/sgj_smart_list/src/abstract_smart_list',
+      side_smart_list: '../node_modules/sgj_smart_list/src/side_smart_list'*/
+    })
+require(['TU/main'],  function(main) { main.exec() })
+</script>

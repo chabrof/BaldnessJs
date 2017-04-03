@@ -1,0 +1,17 @@
+{
+  "name": "BaldnessJs",
+  "description": "Parse some various strings (from html pages, logs, app history, etc.) and extract data with Mustach' style (handlebars) templates",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": {
+    "name": "François Chabrou",
+    "email": "developer@stopgapjs.org",
+    "url": "http://www.stopgapjs.org"
+  },
+  "main": "./generated/baldness.js",
+  "homepage": "http://www.stopgapjs.org/#BaldnessJs",
+  "dependencies": {
+    "requirejs": ">=2.1.14"
+  },
+  "readme": "#BaldnessJs"
+}

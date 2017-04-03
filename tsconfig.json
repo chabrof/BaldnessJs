@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "umd",
+    "target": "es5",
+    "noImplicitAny": false,
+    "rootDir": "ts",
+    "outDir": "js",
+    "sourceMap": true,
+    "lib": [
+      "es2015.promise",
+      "dom",
+      "es5"
+    ]
+  },
+  "exclude" : [
+    "node_modules",
+    "node_modules/**/*",
+    "TU"
+  ],
+  "compileOnSave": true
+}
