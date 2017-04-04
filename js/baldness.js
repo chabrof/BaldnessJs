@@ -94,6 +94,9 @@
                 type: leavesToFind[0].type,
                 src: null,
                 label: match[2],
+                markup: {
+                    begin: match[1]
+                },
                 position: {
                     raw: {
                         begin: pos,
@@ -207,5 +210,36 @@
         section.src = section.src.substr(0, match.index);
         section.markup.end = match[1];
     }
+    /**
+     * Regenerate the template with an AST
+     * (usually for debug purpose)
+     * @function regenerateTpl
+     * @public
+     * @param {ASTLeaf} root of the AST
+     * @return {string} the TPL (which should be the same as the one used to compile AST)
+     */
+    function regenerateTpl(leaf) {
+        return __regenerateTpl[leaf.type](leaf);
+    }
+    exports.regenerateTpl = regenerateTpl;
+    var __regenerateTpl = {};
+    __regenerateTpl.root = function (leaf) {
+        var tpl = '';
+        leaf.children.forEach(function (child) { tpl += regenerateTpl(child); });
+        return tpl;
+    };
+    __regenerateTpl.section = function (leaf) {
+        var tpl = leaf.markup.begin;
+        leaf.children.forEach(function (child) { tpl += regenerateTpl(child); });
+        tpl += leaf.markup.end;
+        return tpl;
+    };
+    __regenerateTpl.text = function (leaf) {
+        return leaf.src;
+    };
+    __regenerateTpl.mustacheVar = function (leaf) {
+        return leaf.markup.begin;
+    };
+    __regenerateTpl.strSwallowing = __regenerateTpl.mustacheVar;
 });
 //# sourceMappingURL=baldness.js.map

@@ -54,6 +54,9 @@ export function compile(tpl :string) {
   return _compileRecur(root)
 }
 
+
+
+
 function _compileRecur(leaf :ASTLeaf) :ASTLeaf {
   let sections = _findSections(leaf.src)
   let curPos = 0
@@ -124,6 +127,9 @@ function __findSimpleLeavesAndTextRecur(tmpTextChild :ASTLeaf, src :string, pos 
         type : leavesToFind[0].type,
         src : null,
         label : match[2],
+        markup : {
+          begin : match[1]
+        },
         position : {
           raw : {
             begin   : pos,
@@ -237,3 +243,35 @@ function _findSectionEnd(section :ASTLeaf) :void {
   section.src = section.src.substr(0, match.index)
   section.markup.end = match[1]
 }
+
+/**
+ * Regenerate the template with an AST
+ * (usually for debug purpose)
+ * @function regenerateTpl
+ * @public
+ * @param {ASTLeaf} root of the AST
+ * @return {string} the TPL (which should be the same as the one used to compile AST)
+ */
+export function regenerateTpl(leaf :ASTLeaf) :string {
+  return __regenerateTpl[leaf.type](leaf)
+}
+
+let __regenerateTpl :any = {}
+__regenerateTpl.root = function(leaf) {
+  let tpl = ''
+  leaf.children.forEach((child) => { tpl += regenerateTpl(child) })
+  return tpl
+}
+__regenerateTpl.section = function(leaf) {
+  let tpl = leaf.markup.begin
+  leaf.children.forEach((child) => { tpl += regenerateTpl(child) })
+  tpl += leaf.markup.end
+  return tpl
+}
+__regenerateTpl.text = function(leaf) {
+  return leaf.src
+}
+__regenerateTpl.mustacheVar = function(leaf) {
+  return leaf.markup.begin
+}
+__regenerateTpl.strSwallowing = __regenerateTpl.mustacheVar
