@@ -32,47 +32,101 @@
     function _compileRecur(leaf) {
         var sections = _findSections(leaf.src);
         var curPos = 0;
+        // Loop into the sections, and get what is preceding them
         sections.forEach(function (section) {
             _compileRecur(section);
-            curPos = __insertChildrenInLeaf(leaf, curPos, section);
+            curPos = __insertMiscAndSection(leaf, curPos, section);
         });
+        // Is there any text after the last section ?
         if (curPos < leaf.src.length - curPos) {
-            // There is still text after the last section
             var text = leaf.src.substr(curPos);
-            leaf.children.push({
-                type: "text",
-                src: leaf.src.substr(curPos),
-                position: {
-                    content: {
-                        begin: curPos,
-                        length: text.length
-                    }
-                }
-            });
+            // We are searching, in text, subparts (text ASTLeaves and other 'simple' ASTLeaves)
+            __findSimpleLeavesAndText(text, curPos)
+                .forEach(function (child) { return leaf.children.push(child); });
         }
         return leaf;
     }
-    function __insertChildrenInLeaf(leaf, pos, section) {
-        // The section can be preceded by text
-        var textChild;
+    function __insertMiscAndSection(leaf, pos, section) {
+        // The section can be preceded by text decorated itself with miscellaneous ASTLeaves
         var sectionRawPos = section.position.raw;
         if (sectionRawPos.begin > pos) {
             var textLen = sectionRawPos.begin - pos;
-            textChild = {
-                type: "text",
-                src: leaf.src.substr(pos, textLen),
-                position: {
-                    content: {
-                        begin: pos,
-                        length: textLen
-                    }
-                }
-            };
-            leaf.children.push(textChild);
+            // We are searching, in text, subparts (text ASTLeves and other 'simple' ASTLeaves)
+            __findSimpleLeavesAndText(leaf.src.substr(pos, textLen), pos)
+                .forEach(function (leafChild) { return leaf.children.push(leafChild); });
         }
-        // Finally push the section as a child of leaf
+        // Finally push the section as a child of the parent leaf
         leaf.children.push(section);
         return sectionRawPos.begin + sectionRawPos.length;
+    }
+    function __findSimpleLeavesAndText(src, pos) {
+        var tmpTextChild = __createTextLeaf(src, pos);
+        var simpleLeavesToFind = [
+            { regExpStr: "({{([a-z_][a-z0-9_]+)}})", type: "mustacheVar" },
+            { regExpStr: "({{\((.*)\)}})", type: "strSwallowing" }
+        ];
+        return __findSimpleLeavesAndTextRecur(tmpTextChild, tmpTextChild.src, tmpTextChild.position.raw.begin, simpleLeavesToFind);
+    }
+    function __findSimpleLeavesAndTextRecur(tmpTextChild, src, pos, leavesToFind) {
+        _console.log("__findSimpleLeavesAndText");
+        _console.log("  src :", src);
+        _console.log("  nbTypes of Leaves to find :", leavesToFind.length);
+        _console.assert(tmpTextChild.type === "text", 'The tmpTextChild must be a "text" typed ASTLeaf');
+        if (leavesToFind[0] === undefined) {
+            _console.log('  Just one text found :', src);
+            return [__createTextLeaf(src, pos)]; // No leaf to find except the text given. -->
+        }
+        var leaves = [];
+        var locPos = 0;
+        var regExp = new RegExp(leavesToFind[0].regExpStr, "i");
+        var match;
+        while (match = src.match(regExp)) {
+            if (match.index > 0) {
+                var subSrc = src.substr(0, match.index);
+                _console.log('  recur for text before the Simple leaf');
+                __findSimpleLeavesAndTextRecur(tmpTextChild, subSrc, pos, leavesToFind.slice(1))
+                    .forEach(function (leaf) { return leaves.push(leaf); });
+                pos += subSrc.length;
+                locPos += subSrc.length;
+            }
+            var simpleLeafLength = match[1].length;
+            leaves.push({
+                type: leavesToFind[0].type,
+                src: null,
+                label: match[2],
+                position: {
+                    raw: {
+                        begin: pos,
+                        length: simpleLeafLength
+                    }
+                }
+            });
+            pos += simpleLeafLength;
+            locPos += simpleLeafLength;
+            src = src.substr(locPos);
+        }
+        // Take care of the potential text after the last found simple ASTLeaf (or the absence of it)
+        _console.log('locPos', pos, 'length', tmpTextChild.position.raw.length);
+        if (locPos < tmpTextChild.position.raw.length) {
+            var subSrc = src.substr(locPos);
+            _console.log('  recur for text after the Simple leaf');
+            __findSimpleLeavesAndTextRecur(tmpTextChild, subSrc, pos, leavesToFind.slice(1))
+                .forEach(function (leaf) { return leaves.push(leaf); });
+        }
+        _console.log('  Nb leaves finally found', leaves.length);
+        return leaves;
+    }
+    function __createTextLeaf(src, posBegin) {
+        return {
+            type: "text",
+            src: src,
+            position: {
+                raw: {
+                    begin: posBegin,
+                    length: src.length
+                }
+            }
+        };
     }
     function _findSections(src) {
         var partialASTLeaf;
@@ -111,7 +165,6 @@
         _console.assert(match[0] !== undefined &&
             match[1] !== undefined &&
             match[2] !== undefined, 'match result not correct: ', match);
-        _console.log("  match:", match);
         return {
             label: match[2],
             type: "section",

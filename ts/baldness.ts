@@ -3,7 +3,8 @@ import { nullConsole } from "console"
  * Provide an interface for a leaf in the Abstract Syntax Tree (AST) of the given template
  * @interface ASTLeaf
  */
-type ASTLeafType =  "section" | "mustacheVar" | "root" | "text";
+type ASTLeafType = "section" | "mustacheVar" | "root" | "text" | "strSwallowing"
+type ASTSimpleLeafType = "mustacheVar" | "strSwallowing"
 interface ASTLeaf {
   label     ?: string,
   children  ?: any[],
@@ -15,17 +16,25 @@ interface ASTLeaf {
     end   ?: string
   },
   position  ?: {
-    raw ?: {
+    raw : {
       begin   :number,
       length  :number
     },
-    content : {
+    content ?: {
       begin   :number,
       length  :number
     }
   }
 }
 
+/**
+ * Provide an interface for the __findSimpleLeavesAndText recursive function
+ * @interface SimpleLeafToFind
+ */
+interface SimpleLeafToFind {
+  regExpStr :string,
+  type :string
+}
 let _console :Console = nullConsole
 export function debugOn(prConsole? :Console) {
   _console = prConsole ? prConsole : console;
@@ -48,49 +57,108 @@ export function compile(tpl :string) {
 function _compileRecur(leaf :ASTLeaf) :ASTLeaf {
   let sections = _findSections(leaf.src)
   let curPos = 0
+  // Loop into the sections, and get what is preceding them
   sections.forEach((section :ASTLeaf) => {
     _compileRecur(section)
-    curPos = __insertChildrenInLeaf(leaf, curPos, section)
+    curPos = __insertMiscAndSection(leaf, curPos, section)
   })
 
+  // Is there any text after the last section ?
   if (curPos < leaf.src.length - curPos) {
-    // There is still text after the last section
     let text = leaf.src.substr(curPos)
-    leaf.children.push({
-      type : "text",
-      src : leaf.src.substr(curPos),
-      position : {
-        content : {
-          begin   : curPos,
-          length  : text.length
-        }
-      }
-    })
+    // We are searching, in text, subparts (text ASTLeaves and other 'simple' ASTLeaves)
+    __findSimpleLeavesAndText(text, curPos)
+      .forEach((child) => leaf.children.push(child))
   }
   return leaf
 }
 
-function __insertChildrenInLeaf(leaf :ASTLeaf, pos :number, section :ASTLeaf) :number {
-  // The section can be preceded by text
-  let textChild :ASTLeaf
+function __insertMiscAndSection(leaf :ASTLeaf, pos :number, section :ASTLeaf) :number {
+  // The section can be preceded by text decorated itself with miscellaneous ASTLeaves
   let sectionRawPos = section.position.raw
   if (sectionRawPos.begin > pos) {
     let textLen = sectionRawPos.begin - pos
-    textChild = {
-      type : "text",
-      src : leaf.src.substr(pos, textLen),
-      position : {
-        content : {
-          begin   : pos,
-          length  : textLen
-        }
-      }
-    }
-    leaf.children.push(textChild)
+    // We are searching, in text, subparts (text ASTLeves and other 'simple' ASTLeaves)
+    __findSimpleLeavesAndText(leaf.src.substr(pos, textLen), pos)
+      .forEach((leafChild) => leaf.children.push(leafChild))
   }
-  // Finally push the section as a child of leaf
+  // Finally push the section as a child of the parent leaf
   leaf.children.push(section)
   return sectionRawPos.begin + sectionRawPos.length
+}
+
+function __findSimpleLeavesAndText(src :string, pos :number) {
+  let tmpTextChild = __createTextLeaf(src, pos)
+  let simpleLeavesToFind: SimpleLeafToFind[] = [
+    { regExpStr : "({{([a-z_][a-z0-9_]+)}})", type : "mustacheVar" },
+    { regExpStr : "({{\((.*)\)}})", type :"strSwallowing" } ]
+  return __findSimpleLeavesAndTextRecur(tmpTextChild, tmpTextChild.src, tmpTextChild.position.raw.begin, simpleLeavesToFind)
+}
+
+function __findSimpleLeavesAndTextRecur(tmpTextChild :ASTLeaf, src :string, pos :number, leavesToFind : SimpleLeafToFind[]) :ASTLeaf[] {
+  _console.log("__findSimpleLeavesAndText")
+  _console.log("  src :", src)
+  _console.log("  nbTypes of Leaves to find :", leavesToFind.length)
+  _console.assert(tmpTextChild.type === "text", 'The tmpTextChild must be a "text" typed ASTLeaf')
+
+  if (leavesToFind[0] === undefined) {
+    _console.log('  Just one text found :', src)
+    return [__createTextLeaf(src, pos)] // No leaf to find except the text given. -->
+  }
+  let leaves :ASTLeaf[] = []
+  let locPos = 0
+  let regExp = new RegExp(leavesToFind[0].regExpStr, "i")
+  let match
+
+  while (match = src.match(regExp)) {
+    if (match.index > 0) { // there is a text in front of mustache var
+      let subSrc = src.substr(0, match.index)
+      _console.log('  recur for text before the Simple leaf')
+      __findSimpleLeavesAndTextRecur(tmpTextChild, subSrc, pos, leavesToFind.slice(1))
+        .forEach((leaf) => leaves.push(leaf))
+      pos += subSrc.length
+      locPos += subSrc.length
+    }
+    let simpleLeafLength = match[1].length
+    leaves.push({
+        type : leavesToFind[0].type,
+        src : null,
+        label : match[2],
+        position : {
+          raw : {
+            begin   : pos,
+            length  : simpleLeafLength
+          }
+        }
+      })
+    pos += simpleLeafLength
+    locPos += simpleLeafLength
+    src = src.substr(locPos)
+  }
+
+  // Take care of the potential text after the last found simple ASTLeaf (or the absence of it)
+  _console.log('locPos', pos, 'length', tmpTextChild.position.raw.length)
+  if (locPos < tmpTextChild.position.raw.length) {
+    let subSrc = src.substr(locPos)
+    _console.log('  recur for text after the Simple leaf')
+    __findSimpleLeavesAndTextRecur(tmpTextChild, subSrc, pos, leavesToFind.slice(1))
+      .forEach((leaf) => leaves.push(leaf))
+  }
+  _console.log('  Nb leaves finally found', leaves.length)
+  return leaves
+}
+
+function __createTextLeaf(src :string, posBegin :number) :ASTLeaf {
+  return {
+    type : "text",
+    src : src,
+    position : {
+      raw : {
+        begin   : posBegin,
+        length  : src.length
+      }
+    }
+  }
 }
 
 export function _findSections(src) :ASTLeaf[] {
@@ -125,7 +193,6 @@ function _findSectionBegin(src :string, pos :number) :ASTLeaf {
   _console.assert(match[0] !== undefined &&
                   match[1] !== undefined &&
                   match[2] !== undefined, 'match result not correct: ', match)
-  _console.log("  match:", match)
   return {
     label :  match[2],
     type  : "section",

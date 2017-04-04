@@ -27,7 +27,7 @@ let tplTest1 = `{{#person}}<div>
 
 
 let tplTest3 = 'test of a template with no section {{var1}} ... {{var2}}...'
-let tplTest4 = 'test of a template with no section {handlebars} and finishing with a mustache {{var1}} ... {{var2}}'
+let tplTest4 = 'test of a template with no section {handlebars which have no sense}} {{ } #{}/ and finishing with a mustache {{var1}} ... {{var2}}'
 
 // Activates the verbose mode for BaldnessJs
 debugOn()
@@ -57,9 +57,20 @@ function test2() {
   console.groupEnd()
 }
 
+function test3() {
+  console.group('Tests of a full compilation of a TPL without any section')
+  let AST = compile(tplTest3)
+
+  console.assert(AST.children.length === 1, "AST has a unique child wich is the section 'person'")
+  console.log('AST', AST);
+  console.groupEnd()
+}
+
+
 // Here is the execution of tests
 export function exec() {
   console.log('The tests below pass if there is no error in the console log');
   test1()
   test2()
+  test3()
 }
