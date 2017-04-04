@@ -108,9 +108,8 @@
         // Take care of the potential text after the last found simple ASTLeaf (or the absence of it)
         _console.log('locPos', pos, 'length', tmpTextChild.position.raw.length);
         if (locPos < tmpTextChild.position.raw.length) {
-            var subSrc = src.substr(locPos);
             _console.log('  recur for text after the Simple leaf');
-            __findSimpleLeavesAndTextRecur(tmpTextChild, subSrc, pos, leavesToFind.slice(1))
+            __findSimpleLeavesAndTextRecur(tmpTextChild, src, pos, leavesToFind.slice(1))
                 .forEach(function (leaf) { return leaves.push(leaf); });
         }
         _console.log('  Nb leaves finally found', leaves.length);
