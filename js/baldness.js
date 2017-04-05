@@ -38,7 +38,7 @@
             curPos = __insertMiscAndSection(leaf, curPos, section);
         });
         // Is there any text after the last section ?
-        if (curPos < leaf.src.length - curPos) {
+        if (leaf.src.length - curPos) {
             var text = leaf.src.substr(curPos);
             // We are searching, in text, subparts (text ASTLeaves and other 'simple' ASTLeaves)
             __findSimpleLeavesAndText(text, curPos)

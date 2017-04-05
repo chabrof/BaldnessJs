@@ -23,7 +23,8 @@ let tplTest1 = `{{#person}}<div>
 {{/gender}}
 {{#description}}  <desc>{{text}}</desc>
 {{/description}}</div>
-{{/person}}`
+{{/person}}
+...final text`
 
 
 let tplTest3 = 'test of a template with no section {{var1}} ... {{var2}}...'
@@ -51,7 +52,7 @@ function test2() {
   console.group('Tests of a full compilation of the TPL')
   let AST = compile(tplTest1)
 
-  console.assert(AST.children.length === 1, "AST should have a unique child wich is the section 'person'")
+  console.assert(AST.children.length === 2, "AST should have 2 children wich are the section 'person' and the final text")
   console.assert(AST.children[0].children.length === 7, "The first level section should have 7 children")
   console.log('AST', AST)
   let regeneratedTpl = regenerateTpl(AST)
@@ -65,7 +66,7 @@ function test3() {
   console.group('Tests of a full compilation of a TPL without any section')
   let AST = compile(tplTest3)
 
-  console.assert(AST.children.length === 1, "AST has a unique child wich is the section 'person'")
+  console.assert(AST.children.length === 5, "AST has 5 children")
   console.log('AST', AST);
   console.groupEnd()
 }

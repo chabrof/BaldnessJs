@@ -67,7 +67,7 @@ function _compileRecur(leaf :ASTLeaf) :ASTLeaf {
   })
 
   // Is there any text after the last section ?
-  if (curPos < leaf.src.length - curPos) {
+  if (leaf.src.length - curPos) {
     let text = leaf.src.substr(curPos)
     // We are searching, in text, subparts (text ASTLeaves and other 'simple' ASTLeaves)
     __findSimpleLeavesAndText(text, curPos)

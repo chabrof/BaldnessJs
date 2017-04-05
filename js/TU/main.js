@@ -11,7 +11,7 @@
     Object.defineProperty(exports, "__esModule", { value: true });
     var baldness_1 = require("baldness");
     var sourceTest1 = "<div>\n  <b>Albert Einstein</b><br/>\n  <desc>He was a German-born theoretical physicist. He developed the theory of relativity ... (from Wikipedia)</desc>\n</div>\n<div>\n  <b>Marie Curie</b><br/>\n  <i>female</i><br/>\n  <desc>Marie Sk\u0142odowska Curie (/\u02C8kj\u028Ari, kj\u028A\u02C8ri\u02D0/;[2] French: [ky\u0281i]; Polish: [k\u02B2i\u02C8ri]; 7 November 1867 \u2013 4 July 1934),\nborn Maria Salomea Sk\u0142odowska ([\u02C8marja sal\u0254\u02C8m\u025Ba skw\u0254\u02C8d\u0254fska]),\nwas a Polish and naturalized-French physicist and chemist who conducted pioneering research on radioactivity.(from Wikipedia)\n</desc>\n</div>\n<div>\n  <b>Niels Bohr</b><br/>\n  <i>male</i><br/>\n</div>";
-    var tplTest1 = "{{#person}}<div>\n  <b>{{name}}</b><br/>\n  {{#gender}}<i>{{value}}</i><br/>\n{{/gender}}\n{{#description}}  <desc>{{text}}</desc>\n{{/description}}</div>\n{{/person}}";
+    var tplTest1 = "{{#person}}<div>\n  <b>{{name}}</b><br/>\n  {{#gender}}<i>{{value}}</i><br/>\n{{/gender}}\n{{#description}}  <desc>{{text}}</desc>\n{{/description}}</div>\n{{/person}}\n...final text";
     var tplTest3 = 'test of a template with no section {{var1}} ... {{var2}}...';
     var tplTest4 = 'test of a template with no section {handlebars which have no sense}} {{ } #{}/ and finishing with a mustache {{var1}} ... {{var2}}';
     // Activates the verbose mode for BaldnessJs
@@ -31,7 +31,7 @@
     function test2() {
         console.group('Tests of a full compilation of the TPL');
         var AST = baldness_1.compile(tplTest1);
-        console.assert(AST.children.length === 1, "AST should have a unique child wich is the section 'person'");
+        console.assert(AST.children.length === 2, "AST should have 2 children wich are the section 'person' and the final text");
         console.assert(AST.children[0].children.length === 7, "The first level section should have 7 children");
         console.log('AST', AST);
         var regeneratedTpl = baldness_1.regenerateTpl(AST);
@@ -43,7 +43,7 @@
     function test3() {
         console.group('Tests of a full compilation of a TPL without any section');
         var AST = baldness_1.compile(tplTest3);
-        console.assert(AST.children.length === 1, "AST has a unique child wich is the section 'person'");
+        console.assert(AST.children.length === 5, "AST has 5 children");
         console.log('AST', AST);
         console.groupEnd();
     }
