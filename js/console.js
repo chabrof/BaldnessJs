@@ -85,6 +85,7 @@
         };
         return NullConsole;
     }());
+    exports.NullConsole = NullConsole;
     // Singleton
     exports.nullConsole = new NullConsole();
 });

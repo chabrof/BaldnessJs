@@ -3,7 +3,7 @@
  * @impletments Console
  * This class implements all Browser Console methods
  */
-class NullConsole implements Console {
+export class NullConsole implements Console {
   log() :void {
     return null;
   }
@@ -94,4 +94,4 @@ class NullConsole implements Console {
 }
 
 // Singleton
-export let nullConsole = new NullConsole();
+export let nullConsole = new NullConsole()
