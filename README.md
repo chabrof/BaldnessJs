@@ -1,6 +1,6 @@
 # BaldnessJs
 
-BaldnessJs, as the reverse of MustacheJs (or Handlebars.js equivalent), is a little library made for parsing various strings (from html pages, logs, app history, etc.) and extract data with Mustach' style (handlebars) templates.
+BaldnessJs, as the reverse of MustacheJs (or Handlebars.js equivalent), is a little library made for parsing various strings (from html pages, logs, app history, etc.) and extract data with Mustache' style (handlebars) templates.
 
 ## simple sample
 
@@ -15,11 +15,12 @@ I have {{money}} dollars in my pocket and I want to buy {{thing}} .{{#clothes}} 
 gives :
 ```js
 {
-  "money" : 3,
+  "money" : "3",
   "thing" : "a sandwich"
-  "clothes" :
+  "clothes" : {
     "cloth" : "My pants"
     "color" : "blue"
+  }
 }
 ```
 
@@ -33,7 +34,7 @@ is a variable, it will store the parsed data (in the simple example, 'money' var
 ```html
 {{#bar}}
 ```
-is a mandatory section : a part of a text wich will creates a sub object in the result (such as "clothes" section in the sample bellow)
+is a mandatory section (a part of the text), it will create a sub object in the result (such as "clothes" section in the sample bellow)
 
 ```html
 {{#bar?}}

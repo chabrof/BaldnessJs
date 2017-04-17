@@ -1,6 +1,6 @@
 import { ASTLeaf } from "BaldnessJs/_interfaces";
 interface Baldness {
-    parse: (source: string, tpl: string) => Object;
+    parse: (source: string, tpl: string | ASTLeaf) => any;
     getLastAST: () => ASTLeaf;
     compile: (tpl: string) => ASTLeaf;
     regenerateTpl: (leaf: ASTLeaf) => string;

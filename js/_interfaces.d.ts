@@ -9,7 +9,10 @@ export interface ASTLeaf {
     children?: any[];
     src: string;
     type: any;
-    info?: Object;
+    info?: {
+        repeatMode?: string;
+        regExp?: string;
+    };
     markup?: {
         begin: string;
         end?: string;
@@ -28,4 +31,8 @@ export interface ASTLeaf {
 export interface MatchInfo {
     matchIdx: number;
     ASTLeaf: ASTLeaf;
+}
+export interface RevParseFlat {
+    ASTLeaf: ASTLeaf;
+    occurencies: string[];
 }

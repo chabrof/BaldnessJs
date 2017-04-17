@@ -66,8 +66,8 @@ function __insertMiscAndSection(leaf :ASTLeaf, pos :number, section :ASTLeaf) :n
 function __findSimpleLeavesAndText(src :string, pos :number) {
   let tmpTextChild = __createTextLeaf(src, pos)
   let simpleLeavesToFind: SimpleLeafToFind[] = [
-    { regExpStr : "({{([a-z_][a-z0-9_]+)}})", type : "mustacheVar" },
-    { regExpStr : "({{\((.*)\)}})", type :"strSwallowing" } ]
+    { regExpStr : "({{([a-z_][a-z0-9_]+)(?:\\((.+)\\))?}})", type : "mustacheVar" },
+    { regExpStr : "({{\\((.+)\\)}})", type :"strSwallowing" } ]
   return __findSimpleLeavesAndTextRecur(tmpTextChild, tmpTextChild.src, tmpTextChild.position.raw.begin, simpleLeavesToFind)
 }
 
@@ -89,7 +89,7 @@ function __findSimpleLeavesAndTextRecur(tmpTextChild :ASTLeaf, src :string, pos 
 
   while (match = src.match(regExp)) {
     let lengthToShorten = 0
-    _console.log('We found a leaf:', match[2])
+    _console.log(`%cWe found a ${leavesToFind[0].type}:`, "color: darkGreen; font-weight: bold;", match[2], '"' + match[1] + '"')
     if (match.index > 0) { // there is a text in front of mustache var
       let subSrc = src.substr(0, match.index)
       _console.log(`Recur for text before the Simple leaf (${match[2]}). Rest of Text :`, '"' +  subSrc + '"')
@@ -103,6 +103,7 @@ function __findSimpleLeavesAndTextRecur(tmpTextChild :ASTLeaf, src :string, pos 
         type : leavesToFind[0].type,
         src : null,
         label : match[2],
+        info : match[3] ? { regExp : match[3] } : undefined,
         markup : {
           begin : match[1]
         },
@@ -169,13 +170,15 @@ export function _findSections(src) :ASTLeaf[] {
  */
 function _findSectionBegin(src :string, pos :number) :ASTLeaf {
   _console.log("_findSectionBegin", src)
-  let regExp = new RegExp("({{#([a-z_][a-z0-9_]+)}})", "i")
+  let regExp = new RegExp("({{#([a-z_][a-z0-9_]+)([\?\*\+]?)}})", "i")
   let match = src.match(regExp)
   if (! match) return null // --> return
 
   _console.assert(match[0] !== undefined &&
                   match[1] !== undefined &&
                   match[2] !== undefined, 'match result not correct: ', match)
+  _console.assert(match[3] ? match[3] === '?' || match[3] === '*' || match[3] === '+' : true,
+                  "the repeat mode must be '*' or '+' or '?' (or empty)" )
   return {
     label :  match[2],
     type  : "section",
@@ -184,7 +187,7 @@ function _findSectionBegin(src :string, pos :number) :ASTLeaf {
       begin : match[1],
       end   : null
     },
-    info  : { repeatMode : "" },
+    info  : { repeatMode : (match[3] ? match[3] : '') },
     children : [],
     position : {
       raw : {

@@ -9,7 +9,10 @@ export interface ASTLeaf {
   children  ?: any[],
   src       : string,
   type      /* : ASTLeafType*/, // string literal type does not seem to work here
-  info      ?: Object,
+  info      ?: {
+    repeatMode  ?: string,
+    regExp      ?: string
+  },
   markup    ?: {
     begin : string,
     end   ?: string
@@ -30,4 +33,9 @@ export interface ASTLeaf {
 export interface MatchInfo {
     matchIdx  :number,
     ASTLeaf   :ASTLeaf
+}
+
+export interface RevParseFlat {
+  ASTLeaf :ASTLeaf,
+  occurencies : string[]
 }

@@ -1,6 +1,6 @@
 import Baldness from "BaldnessJs/baldness"
 
-let sourceTest1 = `<div>
+let sourceTest1Bis = `<div>
   <b>Albert Einstein</b><br/>
   <desc>He was a German-born theoretical physicist. He developed the theory of relativity ... (from Wikipedia)</desc>
 </div>
@@ -17,14 +17,29 @@ was a Polish and naturalized-French physicist and chemist who conducted pioneeri
   <i>male</i><br/>
 </div>`
 
+let sourceTest1 = `<div>
+  <b>Marie Curie</b><br/>
+  <i>female</i><br/>
+  <desc>Marie Skłodowska Curie (/ˈkjʊri, kjʊˈriː/;[2] French: [kyʁi]; Polish: [kʲiˈri]; 7 November 1867 – 4 July 1934),
+born Maria Salomea Skłodowska ([ˈmarja salɔˈmɛa skwɔˈdɔfska]),
+was a Polish and naturalized-French physicist and chemist who conducted pioneering research on radioactivity.(from Wikipedia)
+</desc>
+</div>
+`
+
+let sourceTest1Ter = `<div>
+  <b>Albert Einstein</b><br/>
+  <desc>He was a German-born theoretical physicist.
+  He developed the theory of relativity ... (from Wikipedia)</desc>
+</div>
+`
+
 let tplTest1 = `{{#person}}<div>
   <b>{{name}}</b><br/>
-  {{#gender}}<i>{{value}}</i><br/>
-{{/gender}}
-{{#description}}  <desc>{{text}}</desc>
+{{#gender?}}  <i>{{value}}</i><br/>
+{{/gender}}{{#description}}  <desc>{{text([^]*)}}</desc>
 {{/description}}</div>
-{{/person}}
-...final text`
+{{/person}}`
 
 
 let tplTest3 = 'test of a template with no section {{var1}} ... {{var2}}...'
@@ -32,11 +47,13 @@ let tplTest4 = 'test of a template with no section {handlebars which have no sen
 
 
 
-let sourceTest2 = "I have 3 dollars in my pocket and I want to buy a sandwich"
-let tplTest5 = "I have {{money}} dollars in my pocket and I want to buy {{thing}}"
+let sourceTest2 = "I have 3 dollars in my pocket and I want to buy a sandwich."
+let tplTest5 = "I have {{money}} dollars in my pocket and I want to buy {{thing}}."
 
-let sourceTest3 = "I have 3 dollars in my pocket and I want to buy a sandwich . My pants are blue."
-let tplTest6 = "I have {{money}} dollars in my pocket and I want to buy {{thing}} .{{#clothes}} {{cloth}} are {{color}}.{{/clothes}}"
+let sourceTest3 = "I have 3 dollars in my pocket and I want to buy a sandwich. My pants are blue."
+let tplTest6 = "I have {{money}} dollars in my pocket and I want to buy {{thing}}.{{#clothes}} {{cloth}} are {{color}}.{{/clothes}}"
+
+let tplTest7 = "I have {{money}} dollars in my pocket and I want to buy {{thing([^.]*)}}.{{#clothes?}} {{cloth}} are {{color}}.{{/clothes}}"
 
 // Activate the verbose mode for BaldnessJs
 Baldness.debugOn()
@@ -96,15 +113,53 @@ function test5() {
   console.groupEnd()
 }
 
+function test6() {
+  console.group('Tests of a simple tpl with a non-mandatory section')
+
+  let AST = Baldness.compile(tplTest7)
+  console.log('AST', AST)
+  console.assert(AST.children.length === 6, "There must be 6 children")
+  console.assert(AST.children[5].type === "section")
+
+  let result = Baldness.parse(sourceTest2, AST)
+  console.log('Result', result);
+  console.assert(result.clothes === undefined, "The section does not appear in source, so it must not appear in result")
+
+  result = Baldness.parse(sourceTest3, AST)
+  console.log('Result', result);
+  console.assert(result.clothes !== undefined, "The section appears in source, so it must appear in result")
+
+  console.groupEnd()
+}
+
+function test7() {
+  console.group('Tests of a parse of simple html source')
+  let result = Baldness.parse(sourceTest1Ter, tplTest1)
+  let AST = Baldness.getLastAST()
+  console.log('AST', AST)
+  console.log('Result', result);
+
+  console.assert(result.person, 'Person has not been recognised')
+  console.assert(result.person.name === 'Albert Einstein', 'Person has not been recognised')
+
+  result = Baldness.parse(sourceTest1, tplTest1)
+  AST = Baldness.getLastAST()
+  console.log('AST', AST)
+  console.log('Result', result);
+  console.groupEnd()
+}
+
 
 //
 // Here is the execution of tests
 //
 export function exec() {
   console.log('The tests below pass if there is no error in the console log');
-  test1()
+  /*test1()
   test2()
   test3()
   test4()
   test5()
+  test6()*/
+  test7()
 }
