@@ -4,12 +4,12 @@
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define(["require", "exports", "BaldnessJs/baldness"], factory);
+        define(["require", "exports", "../baldness"], factory);
     }
 })(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var baldness_1 = require("BaldnessJs/baldness");
+    var baldness_1 = require("../baldness");
     var sourceTest1Bis = "<div>\n  <b>Albert Einstein</b><br/>\n  <desc>He was a German-born theoretical physicist. He developed the theory of relativity ... (from Wikipedia)</desc>\n</div>\n<div>\n  <b>Marie Curie</b><br/>\n  <i>female</i><br/>\n  <desc>Marie Sk\u0142odowska Curie (/\u02C8kj\u028Ari, kj\u028A\u02C8ri\u02D0/;[2] French: [ky\u0281i]; Polish: [k\u02B2i\u02C8ri]; 7 November 1867 \u2013 4 July 1934),\nborn Maria Salomea Sk\u0142odowska ([\u02C8marja sal\u0254\u02C8m\u025Ba skw\u0254\u02C8d\u0254fska]),\nwas a Polish and naturalized-French physicist and chemist who conducted pioneering research on radioactivity.(from Wikipedia)\n</desc>\n</div>\n<div>\n  <b>Niels Bohr</b><br/>\n  <i>male</i><br/>\n</div>";
     var sourceTest1 = "<div>\n  <b>Marie Curie</b><br/>\n  <i>female</i><br/>\n  <desc>Marie Sk\u0142odowska Curie (/\u02C8kj\u028Ari, kj\u028A\u02C8ri\u02D0/;[2] French: [ky\u0281i]; Polish: [k\u02B2i\u02C8ri]; 7 November 1867 \u2013 4 July 1934),\nborn Maria Salomea Sk\u0142odowska ([\u02C8marja sal\u0254\u02C8m\u025Ba skw\u0254\u02C8d\u0254fska]),\nwas a Polish and naturalized-French physicist and chemist who conducted pioneering research on radioactivity.(from Wikipedia)\n</desc>\n</div>\n";
     var sourceTest1Ter = "<div>\n  <b>Albert Einstein</b><br/>\n  <desc>He was a German-born theoretical physicist.\n  He developed the theory of relativity ... (from Wikipedia)</desc>\n</div>\n";
@@ -21,6 +21,8 @@
     var sourceTest3 = "I have 3 dollars in my pocket and I want to buy a sandwich. My pants are blue.";
     var tplTest6 = "I have {{money}} dollars in my pocket and I want to buy {{thing}}.{{#clothes}} {{cloth}} are {{color}}.{{/clothes}}";
     var tplTest7 = "I have {{money}} dollars in my pocket and I want to buy {{thing([^.]*)}}.{{#clothes?}} {{cloth}} are {{color}}.{{/clothes}}";
+    var abcBourseSrc = "AN8068571086;04/01/16;63,21;64,40;62,82;63,15;8251\r\nAN8068571086;05/01/16;64,00;65,00;63,58;64,16;3127\r\nAN8068571086;06/01/16;63,70;64,47;63,00;64,43;3358\r\n";
+    var tplCSVAbcBourse = "{{#actions*}}{{ISIN}};{{day}}/{{month}}/{{year}};{{openingPrice}};{{max}};{{min}};{{closingPrice}};{{volumeWeighted}}\r\n{{/actions}}";
     // Activate the verbose mode for BaldnessJs
     baldness_1.default.debugOn();
     function test1() {
@@ -96,6 +98,16 @@
         console.log('Result', result);
         console.groupEnd();
     }
+    function test8() {
+        console.group('Tests of a parse of simple multi section tpl source from stocks CSV');
+        var result = baldness_1.default.parse(abcBourseSrc, tplCSVAbcBourse);
+        console.log('AST', baldness_1.default.getLastAST());
+        console.assert(result.actions !== undefined, 'Thee must be an actions property');
+        console.assert(result.actions.length !== undefined, 'The actions property must be an array');
+        console.assert(result.actions.length && result.actions.length === 3, 'There must be three lines of stocks so three lines in actions array');
+        console.log('Result:');
+        console.log(result);
+    }
     //
     // Here is the execution of tests
     //
@@ -107,7 +119,9 @@
         test4()
         test5()
         test6()*/
-        test7();
+        //test7()
+        //test6()
+        test8();
     }
     exports.exec = exec;
 });

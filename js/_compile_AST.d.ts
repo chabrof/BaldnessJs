@@ -1,4 +1,4 @@
-import { ASTLeaf } from "BaldnessJs/_interfaces";
+import { ASTLeaf } from "./_interfaces";
 /**
  * Main function wich generates the ASTLeaf (Here is the root of the AST tree) from template string
  * The AST can be compiled once and used several times in order to parse text

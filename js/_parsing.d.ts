@@ -1,4 +1,4 @@
-import { ASTLeaf } from "BaldnessJs/_interfaces";
+import { ASTLeaf } from "./_interfaces";
 /**
  * Main function wich parses the source with a TPL or the ASTLeaf associated (and precompiled with compile method)
  * The result will be a "jsonisable" js object

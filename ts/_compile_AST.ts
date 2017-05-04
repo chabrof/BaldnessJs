@@ -1,5 +1,5 @@
-import { ASTLeaf, ASTLeafType, ASTSimpleLeafType } from "BaldnessJs/_interfaces"
-import { _console } from "BaldnessJs/_debug"
+import { ASTLeaf, ASTLeafType, ASTSimpleLeafType } from "./_interfaces"
+import { _console } from "./_debug"
 /**
  * Provide an interface for the __findSimpleLeavesAndText recursive function
  * @interface SimpleLeafToFind

@@ -1,4 +1,4 @@
-import Baldness from "BaldnessJs/baldness"
+import Baldness from "../baldness"
 
 let sourceTest1Bis = `<div>
   <b>Albert Einstein</b><br/>
@@ -45,8 +45,6 @@ let tplTest1 = `{{#person}}<div>
 let tplTest3 = 'test of a template with no section {{var1}} ... {{var2}}...'
 let tplTest4 = 'test of a template with no section {handlebars which have no sense}} {{ } #{}/ and finishing with a mustache {{var1}} ... {{var2}}'
 
-
-
 let sourceTest2 = "I have 3 dollars in my pocket and I want to buy a sandwich."
 let tplTest5 = "I have {{money}} dollars in my pocket and I want to buy {{thing}}."
 
@@ -54,6 +52,11 @@ let sourceTest3 = "I have 3 dollars in my pocket and I want to buy a sandwich. M
 let tplTest6 = "I have {{money}} dollars in my pocket and I want to buy {{thing}}.{{#clothes}} {{cloth}} are {{color}}.{{/clothes}}"
 
 let tplTest7 = "I have {{money}} dollars in my pocket and I want to buy {{thing([^.]*)}}.{{#clothes?}} {{cloth}} are {{color}}.{{/clothes}}"
+
+let abcBourseSrc = "AN8068571086;04/01/16;63,21;64,40;62,82;63,15;8251\r\nAN8068571086;05/01/16;64,00;65,00;63,58;64,16;3127\r\nAN8068571086;06/01/16;63,70;64,47;63,00;64,43;3358\r\n"
+
+let tplCSVAbcBourse = "{{#actions*}}{{ISIN}};{{day}}/{{month}}/{{year}};{{openingPrice}};{{max}};{{min}};{{closingPrice}};{{volumeWeighted}}\r\n{{/actions}}"
+
 
 // Activate the verbose mode for BaldnessJs
 Baldness.debugOn()
@@ -149,6 +152,18 @@ function test7() {
   console.groupEnd()
 }
 
+function test8() {
+  console.group('Tests of a parse of simple multi section tpl source from stocks CSV')
+  let result = Baldness.parse(abcBourseSrc, tplCSVAbcBourse)
+  console.log('AST', Baldness.getLastAST())
+
+  console.assert(result.actions !== undefined, 'Thee must be an actions property')
+  console.assert(result.actions.length !== undefined, 'The actions property must be an array')
+  console.assert(result.actions.length && result.actions.length === 3, 'There must be three lines of stocks so three lines in actions array')
+
+  console.log('Result:');
+  console.log(result)
+}
 
 //
 // Here is the execution of tests
@@ -161,5 +176,7 @@ export function exec() {
   test4()
   test5()
   test6()*/
-  test7()
+  //test7()
+  //test6()
+  test8()
 }

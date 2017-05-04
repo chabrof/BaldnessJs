@@ -4,14 +4,14 @@
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define(["require", "exports", "BaldnessJs/_debug", "BaldnessJs/_compile_AST", "BaldnessJs/_parsing"], factory);
+        define(["require", "exports", "./_debug", "./_compile_AST", "./_parsing"], factory);
     }
 })(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var _debug_1 = require("BaldnessJs/_debug");
-    var _compile_AST_1 = require("BaldnessJs/_compile_AST");
-    var _parsing_1 = require("BaldnessJs/_parsing");
+    var _debug_1 = require("./_debug");
+    var _compile_AST_1 = require("./_compile_AST");
+    var _parsing_1 = require("./_parsing");
     var Baldness = {
         parse: _parsing_1.parse,
         getLastAST: _parsing_1.getLastAST,

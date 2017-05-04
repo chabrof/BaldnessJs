@@ -1,6 +1,6 @@
-import { ASTLeaf, MatchInfo, RevParseFlat} from "BaldnessJs/_interfaces"
-import { compile } from "BaldnessJs/_compile_AST"
-import { _console } from "BaldnessJs/_debug"
+import { ASTLeaf, MatchInfo, RevParseFlat} from "./_interfaces"
+import { compile } from "./_compile_AST"
+import { _console } from "./_debug"
 
 let tplAST :ASTLeaf
 
@@ -42,60 +42,82 @@ function _parseRecur(source :string, tplAST :ASTLeaf, obj :any) :any {
   _console.assert(source !== undefined, 'source must be a string')
 
   let futureMatches :MatchInfo[] = []
+
+  // Generate regexp to get the children values in src with the cur ASTLeaf
   let regExpStr = __getRegExpPartByType[tplAST.type](tplAST, futureMatches)
-
-  _console.log('regExp generated :', regExpStr)
   let regExp = new RegExp(regExpStr)
-  let match = source.match(regExp)
+  _console.log('regExp generated :', regExpStr)
 
-  if (match === null) throw "Parse failed, the tpl does not match source" // --> Parse Exception
+  if (tplAST.info && (tplAST.info.repeatMode === '*' || tplAST.info.repeatMode === "+")) {
+    let sourceWalker = source
+    let regExpStrNoRepeat = __getRegExpPartByType[tplAST.type](tplAST, undefined, true, true)
+    let regExpNoRepeat = new RegExp(regExpStrNoRepeat)
+    _console.log('regExp no Repeat generated :', regExpNoRepeat)
 
-  _console.log('matches', match)
-  // Store values in obj
-  futureMatches.forEach((futureMatch) => {
-    let ASTLeaf = futureMatch.ASTLeaf
-    _console.log('futureMatch ASTLeaf', ASTLeaf)
-
-    switch (ASTLeaf.type) {
-      case "mustacheVar" :
-        obj[ASTLeaf.label] = match[futureMatch.matchIdx]
-        break
-      case "root" :
-        break
-      case "section" :
-        if (futureMatch.ASTLeaf !== tplAST) { // we check for infinite loop
-          if (!match[futureMatch.matchIdx] || match[futureMatch.matchIdx].length === 0) {
-            if (futureMatch.ASTLeaf.info.repeatMode === "" || futureMatch.ASTLeaf.info.repeatMode === "+")
-              throw `Parse failed, the tpl does not match source (section "${ASTLeaf.label}" is mandatory)` // --> Parse Exception
-
-            break
-          }
-          obj[ASTLeaf.label] = {} //  create the subObj corresponding to section
-          _parseRecur(match[futureMatch.matchIdx], ASTLeaf, obj[ASTLeaf.label]) // --> recur
-        }
-        break
-      default :
-        _console.assert(false, 'futureMatch ASTLeaf can not be of this type', ASTLeaf.type)
+    while (sourceWalker.length > 0) {
+      let sectionParse = {}
+      obj.push(sectionParse)
+      sourceWalker = _match(sourceWalker, regExpNoRepeat, sectionParse)
     }
-  })
-  _console.groupEnd()
+  }
+  else {
+    _match(source, regExp, obj)
+  }
+
+  function _match(source :string, regExp :RegExp, obj :any) {
+    let match = source.match(regExp)
+
+    if (match === null) throw "Parse failed, the tpl does not match source" // --> Parse Exception
+
+    _console.log('matches', match)
+    // Store values in obj
+    futureMatches.forEach((futureMatch) => {
+      let ASTLeaf = futureMatch.ASTLeaf
+      _console.log('futureMatch ASTLeaf', ASTLeaf)
+
+      switch (ASTLeaf.type) {
+        case "mustacheVar" :
+          obj[ASTLeaf.label] = match[futureMatch.matchIdx]
+          break
+        case "root" :
+          break
+        case "section" :
+          if (futureMatch.ASTLeaf !== tplAST) { // we check for infinite loop
+            if (!match[futureMatch.matchIdx] || match[futureMatch.matchIdx].length === 0) {
+              if (futureMatch.ASTLeaf.info.repeatMode === "" || futureMatch.ASTLeaf.info.repeatMode === "+")
+                throw `Parse failed, the tpl does not match source (section "${ASTLeaf.label}" is mandatory)` // --> Parse Exception
+
+              break
+            }
+            obj[ASTLeaf.label] = ASTLeaf.info.repeatMode === '*' || ASTLeaf.info.repeatMode === '+' ? [] : {} //  create the subObj corresponding to section
+            _parseRecur(match[futureMatch.matchIdx], ASTLeaf, obj[ASTLeaf.label]) // --> recur
+          }
+          break
+        default :
+          _console.assert(false, 'futureMatch ASTLeaf can not be of this type', ASTLeaf.type)
+      }
+    })
+    _console.groupEnd()
+    return source.substr(match[0].length)
+  }
   return obj
 }
 
 let __getRegExpPartByType :any = {}
 
-__getRegExpPartByType.root = function(tplAST :ASTLeaf, futureMatches :MatchInfo[], storeMustacheVars :boolean = true) :string {
+__getRegExpPartByType.root = function(tplAST :ASTLeaf, futureMatches :MatchInfo[], storeMustacheVars :boolean = true, disableRepeat :boolean = false) :string {
   _console.log('__getRegExpPartByType.root/section', tplAST)
-  let storeMustacheVarsFlg = (storeMustacheVars === false ? false : (futureMatches.length === 0))
-  let futureMatch :MatchInfo = {
-    matchIdx  : futureMatches.length, // idx in the match array
-    ASTLeaf   : tplAST
+  let storeMustacheVarsFlg = (storeMustacheVars === false ? false : (disableRepeat === true || futureMatches.length === 0))
+  if (futureMatches) {
+    let futureMatch :MatchInfo = {
+      matchIdx  : futureMatches.length, // idx in the match array
+      ASTLeaf   : tplAST
+    }
+    futureMatches.push(futureMatch)
   }
-  futureMatches.push(futureMatch)
-
   let regExpPart = ''
   tplAST.children.forEach((child) => regExpPart += __getRegExpPartByType[child.type](child, futureMatches, storeMustacheVarsFlg))
-  let repeatMode =  ((tplAST.info && tplAST.info.repeatMode) ? tplAST.info.repeatMode : '')
+  let repeatMode =  ((tplAST.info && tplAST.info.repeatMode && (! disableRepeat)) ? tplAST.info.repeatMode : '')
   return storeMustacheVarsFlg ? `(?:(?:${regExpPart})${repeatMode})` : `((?:${regExpPart})${repeatMode})`
 }
 
@@ -110,7 +132,7 @@ __getRegExpPartByType.text = function(tplAST :ASTLeaf, futureMatches :MatchInfo[
 }
 
 __getRegExpPartByType.mustacheVar = function(tplAST :ASTLeaf, futureMatches :MatchInfo[], storeMustacheVars :boolean = true) :string {
-  if (storeMustacheVars) {
+  if (storeMustacheVars && futureMatches) {
     // If futureMatches array is given, we want to store the value of the mustache,
     // we push the ASTLeaf in array to program extraction
     let futureMatch :MatchInfo = {

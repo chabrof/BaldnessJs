@@ -4,12 +4,12 @@
         if (v !== undefined) module.exports = v;
     }
     else if (typeof define === "function" && define.amd) {
-        define(["require", "exports", "BaldnessJs/_debug"], factory);
+        define(["require", "exports", "./_debug"], factory);
     }
 })(function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var _debug_1 = require("BaldnessJs/_debug");
+    var _debug_1 = require("./_debug");
     /**
      * Main function wich generates the ASTLeaf (Here is the root of the AST tree) from template string
      * The AST can be compiled once and used several times in order to parse text

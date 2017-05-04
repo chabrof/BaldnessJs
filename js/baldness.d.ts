@@ -1,4 +1,4 @@
-import { ASTLeaf } from "BaldnessJs/_interfaces";
+import { ASTLeaf } from "./_interfaces";
 interface Baldness {
     parse: (source: string, tpl: string | ASTLeaf) => any;
     getLastAST: () => ASTLeaf;

@@ -1,7 +1,7 @@
-import { debugOn } from "BaldnessJs/_debug"
-import { compile, _findSections, regenerateTpl } from "BaldnessJs/_compile_AST"
-import { parse, getLastAST } from "BaldnessJs/_parsing"
-import { ASTLeaf } from "BaldnessJs/_interfaces"
+import { debugOn } from "./_debug"
+import { compile, _findSections, regenerateTpl } from "./_compile_AST"
+import { parse, getLastAST } from "./_parsing"
+import { ASTLeaf } from "./_interfaces"
 
 interface Baldness {
   parse         : (source :string, tpl :string | ASTLeaf) => any,
